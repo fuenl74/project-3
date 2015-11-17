@@ -1,10 +1,10 @@
 /// Luis Fuentes
 /// Project 3
-
+Rat rt;
 Bird f;
 Ball a,b,c,d,e,q;
 WTable t;
-Button one, two, three;
+Button one, two, three, four;
 Cloud[] cloudList;
 int frame;
 int score;
@@ -69,6 +69,12 @@ int score;
    
    three= new Button(230,5);
    three.words="Bird";
+    
+   four= new Button(320,5);
+   four.words="Rat";
+   
+   rt= new Rat();
+   
    
    ///clouds
   cloudList= new Cloud[7];
@@ -98,10 +104,18 @@ int score;
     drawClouds();
     balls();
     bird();
+    rat();
     buttons();
     frame +=1;
     showScore();
 }
+
+void rat(){
+  rt.moveRat();
+  rt.showRat();
+  rt.scoreFix();
+}
+
 
 void bird(){
   f.show();
@@ -138,24 +152,34 @@ void collision( Ball p, Ball q ) {
     score += 1;
   }
 }
+
+void ratCollision( Ball p, Rat q ) {
+  if ( p.hit( q.x,q.y ) ) {
+    p.dx=0;
+    p.dy=0;
+    if (rt.scoreBuffer == false){          //convoluted fix for the problem with the rat collision scoring.
+      score -= 10;                         // b/c the rat doesn't instantly go in the opposite direction of the ball
+      rt.scoreBufferCounter = 0;           // there is a 'collision' for many frames in a row, causing the score to plumet.
+      rt.scoreBuffer = true;               // w/ the fix, the -10 score can only happen every 10 frames, usually enough time 
+    }                                      // for the rat to move away from the ball
+  }
+}
  /////here is where the main action of the ball happens collision, motion and appearance of the ball
  void balls() {
   
-  a.show();
-  b.show();
-  c.show();
-  d.show();
-  e.show();
-  q.show();
-  
-  
-  a.move();
-  b.move();
-  c.move();
-  d.move();
-  e.move();
-  q.move();
-  
+  a.show();     a.move();
+  b.show();     b.move();
+  c.show();     c.move();
+  d.show();     d.move();
+  e.show();     e.move();
+  q.show();     q.move();
+
+  ratCollision(a, rt);
+  ratCollision(b, rt);
+  ratCollision(c, rt);
+  ratCollision(d, rt);
+  ratCollision(e, rt);
+  ratCollision(q, rt);
 
   collision( a, b );
   collision( a, c );
@@ -185,6 +209,7 @@ void collision( Ball p, Ball q ) {
     one.buttonDisplay();
     two.buttonDisplay();
     three.buttonDisplay();
+    four.buttonDisplay();
 }
 
 void showScore(){
@@ -194,20 +219,19 @@ void showScore(){
 
 
 void mousePressed() {
-   one.buttonReset();
-   two.buttonWall();
-   three.buttonBird();
+   rt.clickRat();
    a.clickBall();
    b.clickBall();
    c.clickBall();
    d.clickBall();
    e.clickBall();
    q.clickCue();
+
+   one.buttonReset();
+   two.buttonWall();
+   three.buttonBird();
+   four.buttonRat();
  }
-
-
-
-
 
 class Ball {
   //Properties
@@ -406,6 +430,69 @@ class Cloud{
     }
   }
 }
+
+
+class Rat {   float x,y,DX,DY;
+  boolean crawl;
+  boolean scoreBuffer;
+  int scoreBufferCounter;
+  
+  Rat() {
+    crawl = false;
+    scoreBuffer = false;
+    x = -50;
+    y = random(170,height-50);
+  }
+  
+  void moveRat(){
+    if (crawl){
+      DX=random(0,5);
+      DY=random(-5,5);
+      x+=DX;
+      y+=DY;
+      if (x>width+50){
+        crawl = false;
+        x = -50;
+        y = random(170,height-50);
+      }
+    }
+  }
+  
+  void showRat(){
+      noStroke();                        //only display mouse if true
+      fill(150,150,150);
+      ellipse(x, y,45,40);//body
+      ellipse(x+27, y+5,25,20); //head 
+      ellipse(x-33, y,35,7);//tail
+      ellipse(x+36, y+5,15,14);//nose
+      ellipse(x-15, y+20,5,20);//leg
+      ellipse(x+15, y+20,5,20);//leg
+      fill(100,100,125);//leg
+      ellipse(x+27, y+5,4,4);//eye
+       
+      
+  
+    }
+ 
+
+  void clickRat(){
+    if (dist(mouseX,mouseY,x,y)<20){
+         crawl = false;
+        x = -50;
+        y = random(170,height-50);
+        score +=50;
+    }
+  }
+      
+  void scoreFix(){
+    if (scoreBuffer == true){
+      scoreBufferCounter +=1;
+      if (scoreBufferCounter>10){
+        scoreBuffer = false;
+      }
+    }
+  }  
+}
 class Button {
   //PROPERTIES
   float x,y;
@@ -455,5 +542,14 @@ class Button {
      }
    }
  }
+  void buttonRat(){
+   if (mouseX >x && mouseX<x+80 && mouseY>y && mouseY<y+40){
+     rt.crawl = true;
+   }
+ }
 }
+
+
+
+
 
